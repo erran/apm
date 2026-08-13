@@ -422,15 +422,14 @@ def _validate_ado_git_package(
     # For GHES / ADO: resolve per-dependency auth up front so the URL
     # carries an embedded token and avoids triggering OS credential
     # helper popups during git ls-remote validation. GitLab probes
-    # anonymously first (see AuthResolver.uses_public_github_anonymous_first)
-    # and only resolves a credential if the anonymous probe fails auth.
-    _anonymous_first = not is_generic and auth_resolver.uses_public_github_anonymous_first(
-        dep_ref.host, port=dep_ref.port, host_type=dep_ref.host_type
-    )
+    # anonymously first and only resolves a credential if that probe
+    # fails auth -- most GitLab shorthand targets are public repos, and
+    # eager resolution would embed a stale/invalid cached credential
+    # before ever finding out one isn't needed.
     _url_token = None
     _dep_ctx = None
     _auth_scheme = "basic"
-    if not is_generic and not _anonymous_first:
+    if not is_generic and not is_gitlab:
         _dep_ctx = auth_resolver.resolve_for_dep(dep_ref)
         _url_token = _dep_ctx.token
         _auth_scheme = getattr(_dep_ctx, "auth_scheme", "basic") or "basic"
@@ -479,10 +478,11 @@ def _validate_ado_git_package(
             preserve_config_isolation=is_insecure,
             suppress_credential_helpers=is_insecure,
         )
-    elif _anonymous_first:
-        validate_env = auth_resolver.build_public_github_anonymous_git_env(
-            base_env=ado_downloader.git_env
-        )
+    elif is_gitlab:
+        # ``ado_downloader.git_env`` is already credential-free (isolated
+        # global config, no platform token env vars) -- skip the per-dep
+        # credential lookup entirely for this first attempt.
+        validate_env = dict(ado_downloader.git_env)
     else:
         validate_env = (
             auth_resolver.git_env_for_context(
@@ -578,7 +578,6 @@ def _validate_ado_git_package(
         result is not None
         and result.returncode != 0
         and is_gitlab
-        and _anonymous_first
         and is_ado_auth_failure_signal(result.stderr or "")
     ):
         _dep_ctx = auth_resolver.resolve_for_dep(dep_ref)

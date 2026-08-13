@@ -464,7 +464,7 @@ class AuthResolver:
 
         This exact-host decision is owned here so validation, ref resolution,
         cache fetches, and clone execution cannot drift into separate host
-        checks. GitHub Enterprise, ADO, and generic hosts retain their
+        checks. GitHub Enterprise, ADO, GitLab, and generic hosts retain their
         existing authentication order.
         """
         return (
@@ -473,7 +473,7 @@ class AuthResolver:
                 port=port,
                 host_type=host_type,
             ).kind
-            in ("github", "gitlab")
+            == "github"
         )
 
     @staticmethod
