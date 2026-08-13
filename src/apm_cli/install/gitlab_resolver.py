@@ -1,6 +1,7 @@
 """GitLab direct-shorthand resolution for install package validation."""
 
 from apm_cli.core.auth import AuthResolver
+from apm_cli.install.errors import AuthenticationError
 from apm_cli.install.validation import _validate_package_exists
 from apm_cli.models.apm_package import DependencyReference
 
@@ -31,11 +32,20 @@ def _try_resolve_gitlab_direct_shorthand(
         candidate = DependencyReference.from_gitlab_shorthand_probe(
             host, repo_url, virtual_suffix, ref
         )
-        if _validate_package_exists(
-            package,
-            verbose=verbose,
-            auth_resolver=auth_resolver,
-            dep_ref=candidate,
-        ):
+        try:
+            reachable = _validate_package_exists(
+                package,
+                verbose=verbose,
+                auth_resolver=auth_resolver,
+                dep_ref=candidate,
+            )
+        except AuthenticationError:
+            # GitLab 401s ambiguous/nonexistent namespace segments the same
+            # way it 401s a real private repo, to avoid leaking existence.
+            # Treat it as "this boundary guess is wrong" and keep probing;
+            # the final resolved candidate still validates (and raises) for
+            # real.
+            reachable = False
+        if reachable:
             return candidate
     return None

@@ -421,11 +421,16 @@ def _validate_ado_git_package(
 
     # For GHES / ADO: resolve per-dependency auth up front so the URL
     # carries an embedded token and avoids triggering OS credential
-    # helper popups during git ls-remote validation.
+    # helper popups during git ls-remote validation. GitLab probes
+    # anonymously first (see AuthResolver.uses_public_github_anonymous_first)
+    # and only resolves a credential if the anonymous probe fails auth.
+    _anonymous_first = not is_generic and auth_resolver.uses_public_github_anonymous_first(
+        dep_ref.host, port=dep_ref.port, host_type=dep_ref.host_type
+    )
     _url_token = None
     _dep_ctx = None
     _auth_scheme = "basic"
-    if not is_generic:
+    if not is_generic and not _anonymous_first:
         _dep_ctx = auth_resolver.resolve_for_dep(dep_ref)
         _url_token = _dep_ctx.token
         _auth_scheme = getattr(_dep_ctx, "auth_scheme", "basic") or "basic"
@@ -473,6 +478,10 @@ def _validate_ado_git_package(
         validate_env = ado_downloader._build_noninteractive_git_env(
             preserve_config_isolation=is_insecure,
             suppress_credential_helpers=is_insecure,
+        )
+    elif _anonymous_first:
+        validate_env = auth_resolver.build_public_github_anonymous_git_env(
+            base_env=ado_downloader.git_env
         )
     else:
         validate_env = (
@@ -561,6 +570,41 @@ def _validate_ado_git_package(
         _log_attempt_result(probe_url, result)
         if result.returncode == 0:
             break
+
+    # GitLab anonymous-first retry: if the anonymous probe failed with an
+    # auth-looking signal, resolve a credential and retry once before
+    # falling through to the AuthenticationError below.
+    if (
+        result is not None
+        and result.returncode != 0
+        and is_gitlab
+        and _anonymous_first
+        and is_ado_auth_failure_signal(result.stderr or "")
+    ):
+        _dep_ctx = auth_resolver.resolve_for_dep(dep_ref)
+        _url_token = _dep_ctx.token
+        _auth_scheme = getattr(_dep_ctx, "auth_scheme", "basic") or "basic"
+        if _url_token:
+            retry_url = ado_downloader._build_repo_url(
+                dep_ref.repo_url,
+                use_ssh=False,
+                dep_ref=dep_ref,
+                token=_url_token,
+                auth_scheme=_auth_scheme,
+            )
+            validate_env = auth_resolver.git_env_for_context(
+                _dep_ctx, base_env=ado_downloader.git_env
+            )
+            cmd = ["git", "ls-remote", "--heads", "--exit-code", retry_url]
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                timeout=30,
+                env=validate_env,
+            )
+            _log_attempt_result(retry_url, result)
 
     # ADO bearer fallback: if PAT was rejected (rc != 0 with auth-failure
     # signal) AND the dep is on Azure DevOps AND we resolved a PAT,
