@@ -701,13 +701,13 @@ class MCPIntegrator:
         # Clean GitLab Duo's mcp.json (project scope only if .gitlab/duo/
         # exists; user scope always, matching its opt-in-at-project /
         # always-on-at-user write behavior)
-        if "gitlab-duo" in target_runtimes:
+        if "duo" in target_runtimes:
             is_user_scope = user_scope or scope is InstallScope.USER
             if is_user_scope or (project_root_path / ".gitlab" / "duo").is_dir():
                 from apm_cli.factory import ClientFactory
 
                 gitlab_duo_client = ClientFactory.create_client(
-                    "gitlab-duo",
+                    "duo",
                     project_root=project_root_path,
                     user_scope=is_user_scope,
                 )

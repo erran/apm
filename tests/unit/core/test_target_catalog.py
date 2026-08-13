@@ -42,8 +42,8 @@ def test_current_target_sets_and_aliases_are_characterized() -> None:
                 "claude",
                 "codex",
                 "cursor",
+                "duo",
                 "gemini",
-                "gitlab-duo",
                 "grok-build",
                 "kiro",
                 "opencode",
@@ -79,8 +79,8 @@ def test_current_target_sets_and_aliases_are_characterized() -> None:
                 "copilot-app",
                 "copilot-cowork",
                 "cursor",
+                "duo",
                 "gemini",
-                "gitlab-duo",
                 "grok-build",
                 "grok-cloud",
                 "hermes",
@@ -241,11 +241,11 @@ def test_current_native_profiles_are_characterized() -> None:
             "agents",
             None,
         ),
-        "gitlab-duo": (
+        "duo": (
             ".gitlab/duo",
             {
                 "skills": ("skills", "/SKILL.md", "skill_standard", ".agents", False),
-                "agents": ("agents", ".agent.md", "gitlab_duo_agent", ".agents", False),
+                "agents": ("agents", ".agent.md", "duo_agent", ".agents", False),
             },
             "agents",
             None,

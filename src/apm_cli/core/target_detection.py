@@ -72,7 +72,7 @@ TargetType = Literal[
     "antigravity",
     "windsurf",
     "kiro",
-    "gitlab-duo",
+    "duo",
     "agent-skills",
     "all",
     "minimal",
@@ -115,7 +115,7 @@ UserTargetType = Literal[
     "grok-build",
     "windsurf",
     "kiro",
-    "gitlab-duo",
+    "duo",
     "agent-skills",
     "all",
     "minimal",
@@ -162,8 +162,8 @@ def detect_target(  # noqa: PLR0911
             return "windsurf", "explicit --target flag"
         elif explicit_target == "kiro":
             return "kiro", "explicit --target flag"
-        elif explicit_target == "gitlab-duo":
-            return "gitlab-duo", "explicit --target flag"
+        elif explicit_target == "duo":
+            return "duo", "explicit --target flag"
         elif explicit_target == "grok-build":
             return "grok-build", "explicit --target flag"
         elif explicit_target == "agent-skills":
@@ -191,8 +191,8 @@ def detect_target(  # noqa: PLR0911
             return "windsurf", "apm.yml target"
         elif config_target == "kiro":
             return "kiro", "apm.yml target"
-        elif config_target == "gitlab-duo":
-            return "gitlab-duo", "apm.yml target"
+        elif config_target == "duo":
+            return "duo", "apm.yml target"
         elif config_target == "grok-build":
             return "grok-build", "apm.yml target"
         elif config_target == "agent-skills":
@@ -254,7 +254,7 @@ def detect_target(  # noqa: PLR0911
     elif grok_exists:
         return "grok-build", "detected .grok/ folder"
     elif gitlab_duo_exists:
-        return "gitlab-duo", "detected .gitlab/duo/ folder"
+        return "duo", "detected .gitlab/duo/ folder"
     else:
         return "minimal", REASON_NO_TARGET_FOLDER
 
@@ -263,8 +263,8 @@ def should_compile_agents_md(target: CompileTargetType) -> bool:
     """Check if AGENTS.md should be compiled.
 
     AGENTS.md is generated for vscode, cursor, opencode, codex, gemini,
-    windsurf, kiro, antigravity, grok-build, hermes, all, and minimal targets.
-    Gemini needs it because GEMINI.md imports AGENTS.md.
+    windsurf, kiro, antigravity, grok-build, duo, hermes, all, and minimal
+    targets. Gemini needs it because GEMINI.md imports AGENTS.md.
 
     Args:
         target: The detected or configured target. May be a string or a
@@ -285,7 +285,7 @@ def should_compile_agents_md(target: CompileTargetType) -> bool:
         "grok-build",
         "windsurf",
         "kiro",
-        "gitlab-duo",
+        "duo",
         "hermes",
         "all",
         "minimal",
@@ -424,7 +424,7 @@ def get_target_description(target: UserTargetType) -> str:
         "grok-build": "AGENTS.md + .grok/rules/ + .grok/agents/ + .grok/commands/ + .grok/skills/",
         "windsurf": "AGENTS.md + .windsurf/rules/ + .agents/skills/ + .windsurf/workflows/ + .windsurf/hooks.json",
         "kiro": "AGENTS.md + .kiro/steering/ + .kiro/skills/ + .kiro/hooks/ + .kiro/settings/mcp.json",
-        "gitlab-duo": "AGENTS.md + .agents/skills/ + .agents/agents/*.agent.md + .gitlab/duo/mcp.json",
+        "duo": "AGENTS.md + .agents/skills/ + .agents/agents/*.agent.md + .gitlab/duo/mcp.json",
         "agent-skills": ".agents/skills/ only (cross-client shared skills -- no agents, hooks, or commands)",
         "openclaw": ".agents/skills/ (project) or ~/.openclaw/skills/ (--global) -- experimental",
         "hermes": "AGENTS.md + .agents/skills/ (project) or ~/.hermes/skills/ + config.yaml MCP (--global) -- experimental",
@@ -1020,7 +1020,7 @@ SIGNAL_WHITELIST: list[tuple[str, str, str]] = [
     ("opencode", "dir", ".opencode"),
     ("windsurf", "dir", ".windsurf"),
     ("kiro", "dir", ".kiro"),
-    ("gitlab-duo", "dir", ".gitlab/duo"),
+    ("duo", "dir", ".gitlab/duo"),
 ]
 
 # Ordered list of targets for display (excludes agent-skills meta-target).
@@ -1034,7 +1034,7 @@ CANONICAL_TARGETS_ORDERED: list[str] = [
     "opencode",
     "windsurf",
     "kiro",
-    "gitlab-duo",
+    "duo",
 ]
 
 # Canonical deploy directories for each target.
@@ -1048,7 +1048,7 @@ CANONICAL_DEPLOY_DIRS: dict[str, str] = {
     "opencode": ".opencode/",
     "windsurf": ".windsurf/",
     "kiro": ".kiro/",
-    "gitlab-duo": ".gitlab/duo/",
+    "duo": ".gitlab/duo/",
 }
 
 # The primary (lowest-friction) signal for each target, used in
@@ -1063,7 +1063,7 @@ CANONICAL_SIGNAL: dict[str, str] = {
     "opencode": ".opencode/",
     "windsurf": ".windsurf/",
     "kiro": ".kiro/",
-    "gitlab-duo": ".gitlab/duo/",
+    "duo": ".gitlab/duo/",
 }
 
 

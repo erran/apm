@@ -36,7 +36,7 @@ _MCP_CLIENT_REGISTRY: dict[str, type] = {
     "windsurf": WindsurfClientAdapter,
     "claude": ClaudeClientAdapter,
     "hermes": HermesClientAdapter,
-    "gitlab-duo": GitLabDuoClientAdapter,
+    "duo": GitLabDuoClientAdapter,
 }
 
 

@@ -176,7 +176,7 @@ class TestTargetProfileUserScope:
             "antigravity",
             "windsurf",
             "kiro",
-            "gitlab-duo",
+            "duo",
             "copilot-cowork",
             "copilot-app",
             "agent-skills",

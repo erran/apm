@@ -330,6 +330,7 @@ class TestExhaustivenessChecks:
             "agents_grok-build",
             "commands_grok-build",
             "instructions_grok-build",
+            "agents_duo",
             "prompts_copilot-app",  # copilot-app uses dedicated prompts bucket
             "canvas_copilot",  # canvas extensions (copilot-only, experimental)
         }

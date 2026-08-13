@@ -99,7 +99,7 @@ class GitLabDuoClientAdapter(CopilotClientAdapter):
 
     supports_user_scope: bool = True
     _client_label: str = "GitLab Duo"
-    target_name: str = "gitlab-duo"
+    target_name: str = "duo"
     mcp_servers_key: str = "mcpServers"
 
     # GitLab Duo's runtime-substitution support has not been individually

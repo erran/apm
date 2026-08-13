@@ -14,15 +14,15 @@ class TestGitLabDuoClientFactory:
     """Verify GitLabDuoClientAdapter registration."""
 
     def test_factory_creates_gitlab_duo_adapter(self) -> None:
-        adapter = ClientFactory.create_client("gitlab-duo")
+        adapter = ClientFactory.create_client("duo")
         assert isinstance(adapter, GitLabDuoClientAdapter)
 
     def test_factory_accepts_case_insensitive_name(self) -> None:
-        adapter = ClientFactory.create_client("GitLab-Duo")
+        adapter = ClientFactory.create_client("DUO")
         assert isinstance(adapter, GitLabDuoClientAdapter)
 
     def test_supported_clients_includes_gitlab_duo(self) -> None:
-        assert "gitlab-duo" in ClientFactory.supported_clients()
+        assert "duo" in ClientFactory.supported_clients()
 
 
 class TestGitLabDuoClientAdapter:
@@ -185,7 +185,7 @@ class TestGitLabDuoRuntimeDiscovery:
 
         runtimes = _discover_installed_runtimes(tmp_path, user_scope=False)
 
-        assert "gitlab-duo" not in runtimes
+        assert "duo" not in runtimes
 
     def test_discovered_with_dir(self, tmp_path: Path) -> None:
         from apm_cli.integration.mcp_integrator_install import _discover_installed_runtimes
@@ -193,7 +193,7 @@ class TestGitLabDuoRuntimeDiscovery:
         (tmp_path / ".gitlab" / "duo").mkdir(parents=True)
         runtimes = _discover_installed_runtimes(tmp_path, user_scope=False)
 
-        assert "gitlab-duo" in runtimes
+        assert "duo" in runtimes
 
     def test_discovered_unconditionally_at_user_scope(self, tmp_path: Path) -> None:
         from apm_cli.integration.mcp_integrator_install import _discover_installed_runtimes
@@ -202,7 +202,7 @@ class TestGitLabDuoRuntimeDiscovery:
 
         runtimes = _discover_installed_runtimes(tmp_path, user_scope=True)
 
-        assert "gitlab-duo" in runtimes
+        assert "duo" in runtimes
 
 
 class TestGitLabDuoUserScopeConfigDir:

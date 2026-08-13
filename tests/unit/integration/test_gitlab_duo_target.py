@@ -45,7 +45,7 @@ def _make_package_info(
 
 
 def test_gitlab_duo_target_profile_matches_ratified_layout() -> None:
-    target = KNOWN_TARGETS["gitlab-duo"]
+    target = KNOWN_TARGETS["duo"]
 
     assert target.root_dir == ".gitlab/duo"
     assert target.auto_create is False
@@ -66,7 +66,7 @@ def test_gitlab_duo_target_profile_matches_ratified_layout() -> None:
 
 
 def test_gitlab_duo_pack_prefixes_cover_both_roots() -> None:
-    target = KNOWN_TARGETS["gitlab-duo"]
+    target = KNOWN_TARGETS["duo"]
     assert target.effective_pack_prefixes == (".gitlab/duo/", ".agents/")
 
 
@@ -75,7 +75,7 @@ def test_gitlab_duo_auto_detected_from_existing_directory(tmp_path: Path) -> Non
 
     target, reason = detect_target(tmp_path)
 
-    assert target == "gitlab-duo"
+    assert target == "duo"
     assert ".gitlab/duo" in reason
 
 
@@ -97,7 +97,7 @@ def test_gitlab_duo_skills_deploy_to_shared_agents_dir(tmp_path: Path) -> None:
     result = SkillIntegrator().integrate_package_skill(
         _make_package_info(package_dir, "skill-pkg", PackageType.CLAUDE_SKILL),
         tmp_path,
-        targets=[KNOWN_TARGETS["gitlab-duo"]],
+        targets=[KNOWN_TARGETS["duo"]],
     )
 
     target_file = tmp_path / ".agents" / "skills" / "skill-pkg" / "SKILL.md"
@@ -111,21 +111,21 @@ def test_gitlab_duo_skills_deploy_to_shared_agents_dir(tmp_path: Path) -> None:
 
 
 def test_gitlab_duo_excluded_from_auto_detected_targets_without_directory(tmp_path: Path) -> None:
-    """Without an explicit --target, auto-detection must not select gitlab-duo.
+    """Without an explicit --target, auto-detection must not select duo.
 
-    ``auto_create=False`` + ``detect_by_dir=True`` means gitlab-duo only
+    ``auto_create=False`` + ``detect_by_dir=True`` means duo only
     participates in auto-detected (implicit) installs when ``.gitlab/duo/``
     already exists -- mirroring cursor/kiro/windsurf/codex. An explicitly
-    passed ``--target gitlab-duo`` still deploys regardless (matching the
+    passed ``--target duo`` still deploys regardless (matching the
     same targets), since explicit selection is a stronger signal than the
     directory-presence heuristic.
     """
     from apm_cli.integration.targets import active_targets
 
-    assert KNOWN_TARGETS["gitlab-duo"] not in active_targets(tmp_path)
+    assert KNOWN_TARGETS["duo"] not in active_targets(tmp_path)
 
     (tmp_path / ".gitlab" / "duo").mkdir(parents=True)
-    assert KNOWN_TARGETS["gitlab-duo"] in active_targets(tmp_path)
+    assert KNOWN_TARGETS["duo"] in active_targets(tmp_path)
 
 
 def test_gitlab_duo_agents_deploy_as_agent_md_under_shared_agents_dir(tmp_path: Path) -> None:
@@ -139,7 +139,7 @@ def test_gitlab_duo_agents_deploy_as_agent_md_under_shared_agents_dir(tmp_path: 
     )
 
     result = AgentIntegrator().integrate_agents_for_target(
-        KNOWN_TARGETS["gitlab-duo"],
+        KNOWN_TARGETS["duo"],
         _make_package_info(package_dir, "agent-pkg"),
         tmp_path,
     )
@@ -160,7 +160,7 @@ def test_gitlab_duo_agents_skipped_without_opt_in_directory(tmp_path: Path) -> N
     )
 
     result = AgentIntegrator().integrate_agents_for_target(
-        KNOWN_TARGETS["gitlab-duo"],
+        KNOWN_TARGETS["duo"],
         _make_package_info(package_dir, "agent-pkg"),
         tmp_path,
     )

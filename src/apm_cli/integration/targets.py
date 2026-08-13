@@ -823,9 +823,12 @@ KNOWN_TARGETS: dict[str, TargetProfile] = {
     # GitLabDuoClientAdapter using GitLab Duo's own schema: a "type"
     # transport discriminator (stdio/http/sse) plus "approvedTools" per
     # server.
+    # Instructions are compile-only (AGENTS.md, via compile_family="agents"
+    # + should_compile_agents_md()) -- not installed as per-file rules, same
+    # as codex.
     # Ref: https://docs.gitlab.com/user/duo_agent_platform/
-    "gitlab-duo": TargetProfile(
-        capability=TARGET_CAPABILITIES["gitlab-duo"],
+    "duo": TargetProfile(
+        capability=TARGET_CAPABILITIES["duo"],
         root_dir=".gitlab/duo",
         primitives={
             "skills": PrimitiveMapping(
@@ -837,7 +840,7 @@ KNOWN_TARGETS: dict[str, TargetProfile] = {
             "agents": PrimitiveMapping(
                 "agents",
                 ".agent.md",
-                "gitlab_duo_agent",
+                "duo_agent",
                 deploy_root=".agents",
             ),
         },

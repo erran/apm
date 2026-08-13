@@ -178,6 +178,21 @@ Use type hints in Python code.
         assert result.output_path, "codex target must route to a compiler, not return empty"
         assert "AGENTS.md" in result.output_path
 
+    def test_target_duo_generates_agents_md(self, temp_project, sample_primitives):
+        """--target duo must produce AGENTS.md, mirroring codex/opencode (issue #766 pattern)."""
+        config = CompilationConfig(
+            target="duo",
+            dry_run=True,
+            single_agents=True,
+        )
+
+        compiler = AgentsCompiler(str(temp_project))
+        result = compiler.compile(config, sample_primitives)
+
+        assert result.success
+        assert result.output_path, "duo target must route to a compiler, not return empty"
+        assert "AGENTS.md" in result.output_path
+
     def test_codex_single_agents_no_claude_preview_issue_765_cli(self, temp_project):
         """Regression for issue #765: CLI --target codex --single-agents must not append Claude preview text.
 
