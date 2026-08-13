@@ -698,6 +698,28 @@ class MCPIntegrator:
                 fail_on_write_error=fail_on_write_error,
             )
 
+        # Clean GitLab Duo's mcp.json (project scope only if .gitlab/duo/
+        # exists; user scope always, matching its opt-in-at-project /
+        # always-on-at-user write behavior)
+        if "gitlab-duo" in target_runtimes:
+            is_user_scope = user_scope or scope is InstallScope.USER
+            if is_user_scope or (project_root_path / ".gitlab" / "duo").is_dir():
+                from apm_cli.factory import ClientFactory
+
+                gitlab_duo_client = ClientFactory.create_client(
+                    "gitlab-duo",
+                    project_root=project_root_path,
+                    user_scope=is_user_scope,
+                )
+                _clean_json_mcp_config(
+                    Path(gitlab_duo_client.get_config_path()),
+                    expanded_stale,
+                    logger,
+                    "GitLab Duo MCP config",
+                    use_rich=True,
+                    fail_on_write_error=fail_on_write_error,
+                )
+
         # Clean JetBrains Copilot user-scope mcp.json
         if "intellij" in target_runtimes:
             from apm_cli.factory import ClientFactory

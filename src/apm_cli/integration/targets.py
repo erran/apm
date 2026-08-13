@@ -812,6 +812,40 @@ KNOWN_TARGETS: dict[str, TargetProfile] = {
         pack_prefixes=(".windsurf/", ".agents/"),
         hooks_config_display=".windsurf/hooks.json",
     ),
+    # GitLab Duo -- GitLab's AI assistant.  The workspace signal is
+    # .gitlab/duo/ (used for auto-detection and as the home for the MCP
+    # config Duo reads), but skills and agents converge onto the cross-tool
+    # .agents/ root -- matching the codex/cursor/windsurf/copilot pattern --
+    # so a single authored primitive deploys everywhere including Duo.
+    # Agents deploy as *.agent.md (the agentskills.io-adjacent convention
+    # also used by Copilot) rather than plain .md.
+    # MCP servers are written to .gitlab/duo/mcp.json by
+    # GitLabDuoClientAdapter using GitLab Duo's own schema: a "type"
+    # transport discriminator (stdio/http/sse) plus "approvedTools" per
+    # server.
+    # Ref: https://docs.gitlab.com/user/duo_agent_platform/
+    "gitlab-duo": TargetProfile(
+        capability=TARGET_CAPABILITIES["gitlab-duo"],
+        root_dir=".gitlab/duo",
+        primitives={
+            "skills": PrimitiveMapping(
+                "skills",
+                "/SKILL.md",
+                "skill_standard",
+                deploy_root=".agents",
+            ),
+            "agents": PrimitiveMapping(
+                "agents",
+                ".agent.md",
+                "gitlab_duo_agent",
+                deploy_root=".agents",
+            ),
+        },
+        auto_create=False,
+        detect_by_dir=True,
+        user_supported=False,
+        pack_prefixes=(".gitlab/duo/", ".agents/"),
+    ),
     # Agent-skills: cross-client shared skills directory (.agents/skills/).
     # Skills primitive only -- no agents, hooks, or commands.
     # Not auto-detected (detect_by_dir=False) because .agents/ is shared by

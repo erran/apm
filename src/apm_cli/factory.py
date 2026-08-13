@@ -8,6 +8,7 @@ from .adapters.client.codex import CodexClientAdapter
 from .adapters.client.copilot import CopilotClientAdapter
 from .adapters.client.cursor import CursorClientAdapter
 from .adapters.client.gemini import GeminiClientAdapter
+from .adapters.client.gitlab_duo import GitLabDuoClientAdapter
 from .adapters.client.hermes import HermesClientAdapter
 from .adapters.client.intellij import IntelliJClientAdapter
 from .adapters.client.kiro import KiroClientAdapter
@@ -35,6 +36,7 @@ _MCP_CLIENT_REGISTRY: dict[str, type] = {
     "windsurf": WindsurfClientAdapter,
     "claude": ClaudeClientAdapter,
     "hermes": HermesClientAdapter,
+    "gitlab-duo": GitLabDuoClientAdapter,
 }
 
 

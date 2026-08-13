@@ -333,6 +333,7 @@ def _discover_installed_runtimes(project_root_path, *, user_scope: bool) -> list
         "gemini": ".gemini",
         "windsurf": ".windsurf",
         "kiro": ".kiro",
+        "gitlab-duo": ".gitlab/duo",
     }
     try:
         from apm_cli.factory import ClientFactory
@@ -353,6 +354,7 @@ def _discover_installed_runtimes(project_root_path, *, user_scope: bool) -> list
             "claude",
             "intellij",
             "hermes",
+            "gitlab-duo",
         ]:
             try:
                 if not _runtime_is_present(
@@ -382,7 +384,7 @@ def _runtime_is_present(
 
     if runtime_name == "vscode":
         return _is_vscode_available(project_root=project_root_path)
-    if runtime_name == "kiro" and user_scope:
+    if runtime_name in ("kiro", "gitlab-duo") and user_scope:
         return True
     if runtime_name in dir_signal:
         return (project_root_path / dir_signal[runtime_name]).is_dir()
@@ -414,8 +416,9 @@ def _discover_installed_runtimes_fallback(
         ("gemini", ".gemini"),
         ("windsurf", ".windsurf"),
         ("kiro", ".kiro"),
+        ("gitlab-duo", ".gitlab/duo"),
     ):
-        if (name == "kiro" and user_scope) or (project_root_path / signal).is_dir():
+        if (name in ("kiro", "gitlab-duo") and user_scope) or (project_root_path / signal).is_dir():
             installed_runtimes.append(name)
     # Claude Code: directory-presence OR binary-on-PATH
     if (project_root_path / ".claude").is_dir() or find_runtime_binary("claude") is not None:

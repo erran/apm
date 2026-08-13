@@ -222,6 +222,13 @@ TARGET_CAPABILITIES: Mapping[str, TargetCapability] = _build_target_catalog(
             compile_family="agents",
             runtimes=("intellij",),
         ),
+        _capability(
+            "gitlab-duo",
+            "GitLab Duo native .gitlab/duo configuration",
+            in_all=True,
+            primitive_profile="gitlab-duo",
+            compile_family="agents",
+        ),
     )
 )
 
