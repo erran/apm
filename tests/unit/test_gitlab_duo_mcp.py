@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import sys
 from pathlib import Path
+from unittest.mock import patch
 
 from apm_cli.adapters.client.gitlab_duo import GitLabDuoClientAdapter
 from apm_cli.factory import ClientFactory
@@ -175,6 +176,83 @@ class TestGitLabDuoFormatServerConfig:
 
         assert "tools" not in config
         assert "id" not in config
+
+
+class TestGitLabDuoAuthAndHeaders:
+    """``_apply_auth_and_headers`` must inject a GitHub token only for
+    legitimate GitHub-hosted remotes, and patching must target this
+    module's ``GitHubTokenManager`` (not copilot.py's)."""
+
+    def test_github_remote_injects_token(self) -> None:
+        adapter = GitLabDuoClientAdapter()
+        server_info = {
+            "name": "github-mcp-server",
+            "remotes": [
+                {"url": "https://api.github.com/v1", "transport_type": "http"},
+            ],
+        }
+
+        with patch("apm_cli.adapters.client.gitlab_duo.GitHubTokenManager") as mock_tm:
+            mock_tm.return_value.get_token_for_purpose.return_value = "test-tok"
+            config = adapter._format_server_config(server_info)
+
+        assert config["headers"]["Authorization"] == "Bearer test-tok"
+
+    def test_non_github_remote_no_token(self) -> None:
+        adapter = GitLabDuoClientAdapter()
+        server_info = {
+            "name": "my-custom-server",
+            "remotes": [
+                {"url": "https://evil.example.com/v1", "transport_type": "http"},
+            ],
+        }
+
+        config = adapter._format_server_config(server_info)
+
+        assert "Authorization" not in config.get("headers", {})
+
+    def test_registry_header_cannot_override_github_token(self) -> None:
+        adapter = GitLabDuoClientAdapter()
+        server_info = {
+            "name": "github-mcp-server",
+            "remotes": [
+                {
+                    "url": "https://api.github.com/v1",
+                    "transport_type": "http",
+                    "headers": [
+                        {"name": "Authorization", "value": "Bearer evil-token"},
+                    ],
+                },
+            ],
+        }
+
+        with patch("apm_cli.adapters.client.gitlab_duo.GitHubTokenManager") as mock_tm:
+            mock_tm.return_value.get_token_for_purpose.return_value = "legit-tok"
+            config = adapter._format_server_config(server_info)
+
+        assert config["headers"]["Authorization"] == "Bearer legit-tok"
+
+    def test_patching_copilot_module_token_manager_has_no_effect(self) -> None:
+        """Regression guard for the module-scoped override: patching
+        copilot.py's GitHubTokenManager must not satisfy a duo lookup
+        (proves gitlab_duo._apply_auth_and_headers resolves the class
+        from its own module namespace, not the inherited one)."""
+        adapter = GitLabDuoClientAdapter()
+        server_info = {
+            "name": "github-mcp-server",
+            "remotes": [
+                {"url": "https://api.github.com/v1", "transport_type": "http"},
+            ],
+        }
+
+        with (
+            patch("apm_cli.adapters.client.copilot.GitHubTokenManager") as mock_tm,
+            patch.dict("os.environ", {}, clear=True),
+        ):
+            mock_tm.return_value.get_token_for_purpose.return_value = "should-not-be-used"
+            config = adapter._format_server_config(server_info)
+
+        assert "Authorization" not in config.get("headers", {})
 
 
 class TestGitLabDuoRuntimeDiscovery:
