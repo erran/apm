@@ -331,6 +331,7 @@ class TestExhaustivenessChecks:
             "commands_grok-build",
             "instructions_grok-build",
             "agents_duo",
+            "commands_duo",
             "prompts_copilot-app",  # copilot-app uses dedicated prompts bucket
             "canvas_copilot",  # canvas extensions (copilot-only, experimental)
         }
@@ -754,6 +755,21 @@ class TestForScope:
         resolved = codex.for_scope(user_scope=True)
         assert resolved is not None
         assert resolved.root_dir == ".codex"
+
+    def test_duo_is_supported_at_user_scope(self):
+        """Duo resolves cleanly at user scope, keeping the .agents deploy_root
+        overrides on every primitive (skills/agents/commands all converge
+        onto ~/.agents/... regardless of scope)."""
+        from apm_cli.integration.targets import KNOWN_TARGETS
+
+        duo = KNOWN_TARGETS["duo"]
+        assert duo.user_supported is True
+        resolved = duo.for_scope(user_scope=True)
+        assert resolved is not None
+        assert resolved.root_dir == ".gitlab/duo"
+        assert set(resolved.primitives) == {"skills", "agents", "commands"}
+        for prim_name in ("skills", "agents", "commands"):
+            assert resolved.primitives[prim_name].deploy_root == ".agents"
 
     def test_resolves_root_dir_to_user_root(self):
         """for_scope replaces root_dir with user_root_dir."""

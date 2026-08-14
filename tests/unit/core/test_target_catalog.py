@@ -246,6 +246,7 @@ def test_current_native_profiles_are_characterized() -> None:
             {
                 "skills": ("skills", "/SKILL.md", "skill_standard", ".agents", False),
                 "agents": ("agents", ".agent.md", "duo_agent", ".agents", False),
+                "commands": ("commands", ".md", "claude_command", ".agents", False),
             },
             "agents",
             None,

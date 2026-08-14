@@ -814,11 +814,19 @@ KNOWN_TARGETS: dict[str, TargetProfile] = {
     ),
     # GitLab Duo -- GitLab's AI assistant.  The workspace signal is
     # .gitlab/duo/ (used for auto-detection and as the home for the MCP
-    # config Duo reads), but skills and agents converge onto the cross-tool
-    # .agents/ root -- matching the codex/cursor/windsurf/copilot pattern --
-    # so a single authored primitive deploys everywhere including Duo.
+    # config Duo reads), but skills, agents, and commands all converge onto
+    # the cross-tool .agents/ root -- matching the codex/cursor/windsurf/
+    # copilot pattern -- so a single authored primitive deploys everywhere
+    # including Duo.
     # Agents deploy as *.agent.md (the agentskills.io-adjacent convention
     # also used by Copilot) rather than plain .md.
+    # Commands are custom slash commands: markdown files under
+    # .agents/commands/ (project scope).  Duo's CLI documents only a
+    # `description` frontmatter field, but this reuses the shared
+    # claude_command format (same as cursor/grok-build) since its
+    # cross-tool subset -- description, allowed-tools, model,
+    # argument-hint, input -- is a harmless superset; extra keys are
+    # simply ignored by Duo.
     # MCP servers are written to .gitlab/duo/mcp.json by
     # GitLabDuoClientAdapter using GitLab Duo's own schema: a "type"
     # transport discriminator (stdio/http/sse) plus "approvedTools" per
@@ -826,7 +834,14 @@ KNOWN_TARGETS: dict[str, TargetProfile] = {
     # Instructions are compile-only (AGENTS.md, via compile_family="agents"
     # + should_compile_agents_md()) -- not installed as per-file rules, same
     # as codex.
+    # User scope: every primitive already routes through the deploy_root=
+    # ".agents" override, which resolves to ~/.agents/{skills,agents,
+    # commands} under for_scope(user_scope=True) (project_root becomes
+    # Path.home()) -- the same shared cross-tool directory Duo's own docs
+    # point to for user-level commands, so no user_root_dir override is
+    # needed here.
     # Ref: https://docs.gitlab.com/user/duo_agent_platform/
+    # Ref: https://docs.gitlab.com/user/gitlab_duo_cli/customize/
     "duo": TargetProfile(
         capability=TARGET_CAPABILITIES["duo"],
         root_dir=".gitlab/duo",
@@ -843,10 +858,16 @@ KNOWN_TARGETS: dict[str, TargetProfile] = {
                 "duo_agent",
                 deploy_root=".agents",
             ),
+            "commands": PrimitiveMapping(
+                "commands",
+                ".md",
+                "claude_command",
+                deploy_root=".agents",
+            ),
         },
         auto_create=False,
         detect_by_dir=True,
-        user_supported=False,
+        user_supported=True,
         pack_prefixes=(".gitlab/duo/", ".agents/"),
     ),
     # Agent-skills: cross-client shared skills directory (.agents/skills/).

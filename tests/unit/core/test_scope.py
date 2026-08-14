@@ -211,6 +211,17 @@ class TestTargetProfileUserScope:
         assert KNOWN_TARGETS["kiro"].user_supported is True
         assert KNOWN_TARGETS["kiro"].user_root_dir == ".kiro"
 
+    def test_duo_is_supported_at_user_scope(self):
+        # Every duo primitive routes through deploy_root=".agents", so it is
+        # fully (not partially) supported without a dedicated user_root_dir.
+        assert KNOWN_TARGETS["duo"].user_supported is True
+        assert KNOWN_TARGETS["duo"].user_root_dir is None
+
+    def test_supports_at_user_scope_duo(self):
+        assert KNOWN_TARGETS["duo"].supports_at_user_scope("skills") is True
+        assert KNOWN_TARGETS["duo"].supports_at_user_scope("agents") is True
+        assert KNOWN_TARGETS["duo"].supports_at_user_scope("commands") is True
+
     def test_copilot_user_root_dir(self):
         assert KNOWN_TARGETS["copilot"].user_root_dir == ".copilot"
 

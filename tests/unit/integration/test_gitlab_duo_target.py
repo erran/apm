@@ -7,6 +7,7 @@ from pathlib import Path
 
 from apm_cli.core.target_detection import detect_target
 from apm_cli.integration.agent_integrator import AgentIntegrator
+from apm_cli.integration.command_integrator import CommandIntegrator
 from apm_cli.integration.skill_integrator import SkillIntegrator
 from apm_cli.integration.targets import KNOWN_TARGETS
 from apm_cli.models.apm_package import (
@@ -50,8 +51,8 @@ def test_gitlab_duo_target_profile_matches_ratified_layout() -> None:
     assert target.root_dir == ".gitlab/duo"
     assert target.auto_create is False
     assert target.detect_by_dir is True
-    assert target.user_supported is False
-    assert set(target.primitives) == {"agents", "skills"}
+    assert target.user_supported is True
+    assert set(target.primitives) == {"agents", "skills", "commands"}
 
     agents = target.primitives["agents"]
     assert agents.subdir == "agents"
@@ -63,6 +64,12 @@ def test_gitlab_duo_target_profile_matches_ratified_layout() -> None:
     assert skills.extension == "/SKILL.md"
     assert skills.format_id == "skill_standard"
     assert skills.deploy_root == ".agents"
+
+    commands = target.primitives["commands"]
+    assert commands.subdir == "commands"
+    assert commands.extension == ".md"
+    assert commands.format_id == "claude_command"
+    assert commands.deploy_root == ".agents"
 
 
 def test_gitlab_duo_pack_prefixes_cover_both_roots() -> None:
@@ -148,6 +155,47 @@ def test_gitlab_duo_agents_deploy_as_agent_md_under_shared_agents_dir(tmp_path: 
     assert result.files_integrated == 1
     assert target_file.exists()
     assert not (tmp_path / ".gitlab" / "duo" / "agents").exists()
+
+
+def test_gitlab_duo_commands_deploy_to_shared_agents_dir(tmp_path: Path) -> None:
+    (tmp_path / ".gitlab" / "duo").mkdir(parents=True)
+    package_dir = tmp_path / "command-pkg"
+    prompts_dir = package_dir / ".apm" / "prompts"
+    prompts_dir.mkdir(parents=True)
+    (prompts_dir / "daily.prompt.md").write_text(
+        "---\ndescription: Prepare a daily report\n---\n\nSummarize my open TODOs.\n",
+        encoding="utf-8",
+    )
+
+    result = CommandIntegrator().integrate_commands_for_target(
+        KNOWN_TARGETS["duo"],
+        _make_package_info(package_dir, "command-pkg"),
+        tmp_path,
+    )
+
+    target_file = tmp_path / ".agents" / "commands" / "daily.md"
+    assert result.files_integrated == 1
+    assert target_file.exists()
+    assert not (tmp_path / ".gitlab" / "duo" / "commands").exists()
+
+
+def test_gitlab_duo_commands_skipped_without_opt_in_directory(tmp_path: Path) -> None:
+    package_dir = tmp_path / "command-pkg"
+    prompts_dir = package_dir / ".apm" / "prompts"
+    prompts_dir.mkdir(parents=True)
+    (prompts_dir / "daily.prompt.md").write_text(
+        "---\ndescription: Prepare a daily report\n---\n\nSummarize my open TODOs.\n",
+        encoding="utf-8",
+    )
+
+    result = CommandIntegrator().integrate_commands_for_target(
+        KNOWN_TARGETS["duo"],
+        _make_package_info(package_dir, "command-pkg"),
+        tmp_path,
+    )
+
+    assert result.files_integrated == 0
+    assert not (tmp_path / ".agents" / "commands").exists()
 
 
 def test_gitlab_duo_agents_skipped_without_opt_in_directory(tmp_path: Path) -> None:

@@ -949,6 +949,58 @@ class TestSkillInstallUninstallCycle:
         deployed = _posix_relpaths(self.project_root, result.target_paths)
         assert any(p.startswith(".agents/skills/") for p in deployed)
 
+    def test_duo_user_scope(self):
+        """Duo skills/agents/commands all deploy to .agents/... at user scope
+        (deploy_root override applies regardless of scope)."""
+        target = KNOWN_TARGETS["duo"].for_scope(user_scope=True)
+        assert target is not None
+        # auto_create=False: duo requires .gitlab/duo/ to exist (opt-in)
+        (self.project_root / ".gitlab" / "duo").mkdir(parents=True)
+
+        pkg_info = _make_pkg(
+            self.project_root,
+            name="test-skill",
+            instructions=False,
+            agents=True,
+            commands=True,
+            skills=True,
+        )
+
+        skill_integrator = SkillIntegrator()
+        agent_integrator = AgentIntegrator()
+        command_integrator = CommandIntegrator()
+
+        skill_result = skill_integrator.integrate_package_skill(
+            pkg_info, self.project_root, targets=[target]
+        )
+        agent_result = agent_integrator.integrate_agents_for_target(
+            target, pkg_info, self.project_root
+        )
+        command_result = command_integrator.integrate_commands_for_target(
+            target, pkg_info, self.project_root
+        )
+
+        assert skill_result.skill_created or skill_result.skill_updated
+        assert agent_result.files_integrated >= 1
+        assert command_result.files_integrated >= 1
+
+        deployed = _posix_relpaths(
+            self.project_root,
+            skill_result.target_paths + agent_result.target_paths + command_result.target_paths,
+        )
+        assert any(p.startswith(".agents/skills/") for p in deployed)
+        assert any(p.startswith(".agents/agents/") for p in deployed)
+        assert any(p.startswith(".agents/commands/") for p in deployed)
+
+        # Nothing is written directly under .gitlab/duo/ -- it is only the
+        # opt-in presence signal and the MCP config home.
+        assert not (self.project_root / ".gitlab" / "duo" / "skills").exists()
+        assert not (self.project_root / ".gitlab" / "duo" / "agents").exists()
+        assert not (self.project_root / ".gitlab" / "duo" / "commands").exists()
+
+        for p in deployed:
+            assert (self.project_root / p).exists()
+
     def test_claude_project_scope(self):
         """Skill deploys to .claude/skills/ at project scope."""
         target = KNOWN_TARGETS["claude"].for_scope(user_scope=False)
